@@ -17,7 +17,7 @@ class Cliente(models.Model):
     def __str__(self):
         return self.nombre
 
-class Venta(models.Model):  # ← Agregué 'class' que faltaba
+class Venta(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
     fecha = models.DateTimeField(auto_now_add=True)
     anulada = models.BooleanField(default=False)
@@ -32,12 +32,15 @@ class Venta(models.Model):  # ← Agregué 'class' que faltaba
 class DetalleVenta(models.Model):
     venta = models.ForeignKey(Venta, related_name='detalles', on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
-    cantidad = models.PositiveIntegerField()
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    cantidad = models.PositiveIntegerField(default=1)  # ← Agregué default
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # ← Agregué default
     
     @property
     def subtotal(self):
-        return self.cantidad * self.precio_unitario
+        # Versión segura que evita el error None * None
+        if self.cantidad is not None and self.precio_unitario is not None:
+            return self.cantidad * self.precio_unitario
+        return 0
     
     def __str__(self):
         return f"{self.producto} x{self.cantidad}"
