@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import Producto, Cliente, Venta, DetalleVenta
 
+#debes de implementar: inlines para detalle de venta, cálculo de total, reporte básico por rango de fechas.
+
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
     list_display = ("nombre", "sku", "precio", "stock", "activo")
