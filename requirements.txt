@@ -3,3 +3,4 @@ django
 python-dotenv
 gunicorn
 psycopg2
+djangorestframework
