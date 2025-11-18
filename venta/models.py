@@ -1,46 +1,52 @@
 from django.db import models
 
-class Producto(models.Model):
-    nombre = models.CharField(max_length=120, db_index=True)
-    sku = models.CharField(max_length=50, unique=True)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveIntegerField(default=0)
-    activo = models.BooleanField(default=True)
-    
+class Categoria(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True)
+
     def __str__(self):
-        return f"{self.nombre} ({self.sku})"
+        return self.nombre
+
+class Producto(models.Model):
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.IntegerField(default=0)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nombre
 
 class Cliente(models.Model):
-    nombre = models.CharField(max_length=120)
-    email = models.EmailField(blank=True, null=True)
-    
+    nombre = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    telefono = models.CharField(max_length=20, blank=True)
+    direccion = models.TextField(blank=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return self.nombre
 
 class Venta(models.Model):
-    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
-    fecha = models.DateTimeField(auto_now_add=True)
-    anulada = models.BooleanField(default=False)
-    
-    @property
-    def total(self):
-        return sum(d.subtotal for d in self.detalles.all())
-    
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    fecha_venta = models.DateTimeField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     def __str__(self):
-        return f"Venta #{self.pk} — {self.cliente}"
+        return f"Venta {self.id} - {self.cliente.nombre}"
 
 class DetalleVenta(models.Model):
-    venta = models.ForeignKey(Venta, related_name='detalles', on_delete=models.CASCADE)
-    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
-    cantidad = models.PositiveIntegerField(default=1)  # ← Agregué default
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # ← Agregué default
-    
-    @property
-    def subtotal(self):
-        # Versión segura que evita el error None * None
-        if self.cantidad is not None and self.precio_unitario is not None:
-            return self.cantidad * self.precio_unitario
-        return 0
-    
+    venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.IntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
     def __str__(self):
-        return f"{self.producto} x{self.cantidad}"
+        return f"Detalle {self.id} - {self.producto.nombre}"
+
+    def save(self, *args, **kwargs):
+        # Calcular subtotal automáticamente
+        self.subtotal = self.cantidad * self.precio_unitario
+        super().save(*args, **kwargs)

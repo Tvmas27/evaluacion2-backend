@@ -1,5 +1,6 @@
 from django import forms
 from .models import Producto
+from rest_framework import serializers
 
 class ProductoForm(forms.ModelForm):
     class Meta:

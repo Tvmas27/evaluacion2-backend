@@ -1,47 +1,35 @@
-from  rest_framework import serializers
-from .models import Venta
-from .models import Cliente
-from .models import DetalleVenta
-from .models import Producto
+from rest_framework import serializers
+from .models import Categoria, Producto, Cliente, Venta, DetalleVenta
 
-class VentaSerializer(serializers.ModelSerializer): 
-    total = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-
+class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Venta
-        fields = ['nombre', 
-                  'sku', 
-                  'precio', 
-                  'stock', 
-                  'activo']
-        
+        model = Categoria
+        fields = '__all__'
+
+class ProductoSerializer(serializers.ModelSerializer):
+    categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
+    
+    class Meta:
+        model = Producto
+        fields = '__all__'
 
 class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
-        fields = ['nombre',
-                   'email']
-        
+        fields = '__all__'
 
 class DetalleVentaSerializer(serializers.ModelSerializer):
-    subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    producto_nombre = serializers.CharField(source='producto.nombre', read_only=True)
+    subtotal = serializers.ReadOnlyField()
 
     class Meta:
         model = DetalleVenta
-        fields = ['producto',
-                  'cantidad',
-                  'precio_unitario',
-                  'subtotal']
-        
-class VentaDetailSerializer(serializers.ModelSerializer):  
-    cliente = ClienteSerializer()
-    detalles = DetalleVentaSerializer(many=True)
-    total = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+        fields = '__all__'
+
+class VentaSerializer(serializers.ModelSerializer):
+    cliente_nombre = serializers.CharField(source='cliente.nombre', read_only=True)
+    detalles = DetalleVentaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Venta
-        fields = ['cliente',
-                  'fecha',
-                  'anulada',
-                  'detalles',
-                  'total']
+        fields = '__all__'

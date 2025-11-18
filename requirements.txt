@@ -4,3 +4,5 @@ python-dotenv
 gunicorn
 psycopg2
 djangorestframework
+djangorestframework-simplejwt
+djangorestframework django-filter

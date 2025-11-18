@@ -1,36 +1,44 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import require_POST
-from .models import Producto , DetalleVenta
-from .forms import ProductoForm
+from rest_framework import viewsets, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Categoria, Producto, Cliente, Venta, DetalleVenta
+from .serializers import (
+    CategoriaSerializer, 
+    ProductoSerializer, 
+    ClienteSerializer, 
+    VentaSerializer, 
+    DetalleVentaSerializer
+)
 
-from django.contrib.auth.models import Group, User
-from rest_framework import permissions, viewsets
-from .serializers import GroupSerializer, UserSerializer , ProductoSerializer , DetalleVentaSerializer
-
-
+class CategoriaViewSet(viewsets.ModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['nombre']
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all().order_by('nombre')
+    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
-    Permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['nombre', 'descripcion']
+    filterset_fields = ['categoria', 'precio']
+    ordering_fields = ['precio', 'stock', 'fecha_creacion']
 
-class groupViewSet(viewsets.ModelViewSet):
-    queryset = Group.objects.all().order_by('')
-    serializer_class = GroupSerializer
-    Permission_classes = [permissions.IsAuthenticated]
+class ClienteViewSet(viewsets.ModelViewSet):
+    queryset = Cliente.objects.all()
+    serializer_class = ClienteSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['nombre', 'email']
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all().order_by('')
-    serializer_class = UserSerializer
-    Permission_classes = [permissions.IsAuthenticated]
+class VentaViewSet(viewsets.ModelViewSet):
+    queryset = Venta.objects.all()
+    serializer_class = VentaSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['cliente', 'fecha_venta']
+    ordering_fields = ['fecha_venta', 'total']
 
-
-class detalleVentaViewSet(viewsets.ModelViewSet):
-    queryset = DetalleVenta.objects.all().order_by('')
+class DetalleVentaViewSet(viewsets.ModelViewSet):
+    queryset = DetalleVenta.objects.all()
     serializer_class = DetalleVentaSerializer
-    Permission_classes = [permissions.IsAuthenticated]
-
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['venta', 'producto']
 
